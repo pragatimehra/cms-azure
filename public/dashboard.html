@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: auto;
+            margin: 50px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #login-info,
+        #contact-info {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .divider {
+            width: 1px;
+            background-color: #007bff;
+            margin: 20px;
+        }
+
+        h3 {
+            color: #007bff;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #dc3545;
+            border: none;
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #c82333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            display: block;
+            padding: 10px;
+            background-color: #007bff;
+            border-radius: 4px;
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="login-info">
+            <h3>Login Details</h3>
+            <p>Name: <span id="name"></span></p>
+            <p>Username: <span id="username"></span></p>
+            <p>Login Time: <span id="loginTime"></span></p>
+            <button id="logoutBtn">Logout</button>
+        </div>
+        <div class="divider"></div> <!-- Vertical divider -->
+        <div id="main-content">
+            <h1 style="text-align: center;">Welcome to Claim Management System</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum auctor dignissim elit, nec tempus
+                lacus tincidunt non. Vivamus sed velit nec arcu interdum pharetra. Nulla facilisi. Curabitur vehicula
+                quam in orci interdum, eu fermentum sapien scelerisque. Donec sed sapien et metus vehicula sollicitudin.
+                Proin id tellus euismod, ullamcorper libero et, sollicitudin justo. Nullam congue sem vitae orci mattis
+                rutrum.</p>
+            <!-- Add your main content here -->
+
+            <div id="links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/policy">Policy Information</a></li>
+                    <li><a href="/claim">Claim Information</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="divider"></div> <!-- Vertical divider -->
+        <div id="contact-info">
+            <h3>Contact Details</h3>
+            <p>For any clarifications, contact our help desk at 9999999999</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/dashboard-info');
+                if (response.ok) {
+                    const userInfo = await response.json();
+                    displayUserInfo(userInfo);
+                } else {
+                    const errorMessage = await response.text();
+                    console.error('Failed to fetch user info');
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            }
+        });
+
+        function displayUserInfo(userInfo) {
+            document.getElementById('name').textContent = userInfo.name;
+            document.getElementById('username').textContent = userInfo.username;
+            const loginTimeUTC = new Date(userInfo.loginTime);
+            const loginTimeIST = loginTimeUTC.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            document.getElementById('loginTime').textContent = loginTimeIST;
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/logout', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    // Redirect to login page after successful logout
+                    window.location.href = '/login';
+                } else {
+                    console.error('Logout failed');
+                    alert("Logout failed");
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
+        });
+    </script>
+
+</body>
+
+</html>
