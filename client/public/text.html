@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Information</title>
+    <style>
+        /* CSS styles for the table */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 2px solid #a2a2a2;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #a8a8a8;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Policy Information</h1>
+    <div id="policy-list">
+        <!-- Policy list will be displayed here -->
+    </div>
+    <button id="addPolicyBtn" onclick="showPolicyForm()">Add Policy</button>
+
+    <!-- Button to go back to the dashboard -->
+    <button onclick="goToDashboard()">Go Back to Dashboard</button>
+
+
+    <!-- Policy Form (Initially hidden) -->
+    <div id="policyForm" style="display: none;">
+        <h2>Add New Policy</h2>
+        <form id="addPolicyForm">
+            <label for="policyHolder">Policy Holder:</label><br>
+            <input type="text" id="policyHolder" name="policyHolder" required><br>
+
+            <label for="policyType">Policy Type:</label><br>
+            <select id="policyType" name="policyType" required onchange="updateAdditionalDocs()">
+                <option value="" selected disabled>Select</option>
+                <option value="Life Insurance Policy">Life Insurance Policy</option>
+                <option value="Health Insurance Policy">Health Insurance Policy</option>
+                <option value="Auto Insurance Policy">Auto Insurance Policy</option>
+                <option value="Rent Insurance Policy">Rent Insurance Policy</option>
+            </select><br>
+
+            <label for="policyNumber">Policy Number:</label><br>
+            <input type="number" id="policyNumber" name="policyNumber" required><br>
+
+            <label for="amountAssured">Amount Assured:</label><br>
+            <input type="number" id="amountAssured" name="amountAssured" step="0.01" required><br>
+
+            <label for="premiumAmount">Premium Amount:</label><br>
+            <input type="number" id="premiumAmount" name="premiumAmount" step="0.01" required><br>
+
+            <label for="startDate">Start Date:</label><br>
+            <input type="date" id="startDate" name="startDate" required><br>
+
+            <label for="endDate">End Date:</label><br>
+            <input type="date" id="endDate" name="endDate" required readonly><br>
+
+            <label for="policyDocs">Policy Documents:</label><br>
+            <input type="checkbox" id="aadharCard" name="aadharCard" value="Aadhar Card">
+            <label for="aadharCard">Aadhar Card</label><br>
+            <input type="checkbox" id="panCard" name="panCard" value="Pan Card">
+            <label for="panCard">Pan Card</label><br>
+
+            <!-- Additional documents based on policy type -->
+            <div id="additionalDocs">
+                <!-- Additional documents will be dynamically added here -->
+            </div>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Function to calculate the end date
+        function calculateEndDate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = new Date(startDate); // Create a Date object from the start date
+            endDate.setFullYear(endDate.getFullYear()); // Add one year to the start date
+            document.getElementById('endDate').valueAsDate = endDate; // Set the end date input value to the calculated end date
+        }
+
+        // Policy Table
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/user-policies');
+                if (response.ok) {
+                    const policies = await response.json();
+                    displayPoliciesTable(policies);
+                } else {
+                    console.error('Failed to fetch user policies');
+                }
+            } catch (error) {
+                console.error('Error fetching user policies:', error);
+            }
+        });
+
+        function displayPoliciesTable(policies) {
+            const table = document.createElement('table');
+            // Create table header
+            const headerRow = table.insertRow();
+            for (const key in policies[0]) {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            }
+
+            // Create table body
+            policies.forEach(policy => {
+                const row = table.insertRow();
+                for (const key in policy) {
+                    const cell = row.insertCell();
+                    cell.textContent = policy[key];
+                }
+
+            });
+            document.getElementById('policy-list').appendChild(table); // Append table to the DOM
+        }
+
+        function displayPoliciesTable(policies) {
+            const table = document.createElement('table');
+            // Create table header
+            const headerRow = table.insertRow();
+            const keys = Object.keys(policies[0]); // Get the keys to ensure the order of columns
+            keys.forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            // Add a new column for the Action
+            const actionHeader = document.createElement('th');
+            actionHeader.textContent = 'Action';
+            headerRow.appendChild(actionHeader);
+            // Create table body
+            policies.forEach(policy => {
+                const row = table.insertRow();
+                keys.forEach(key => {
+                    const cell = row.insertCell();
+                    cell.textContent = policy[key];
+                });
+                // Add delete button in each row
+                const deleteCell = row.insertCell();
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-button');
+                deleteButton.dataset.policyNumber = policy['PolicyNumber']; // Capturing the PolicyNumber here
+                deleteCell.appendChild(deleteButton);
+            });
+            document.getElementById('policy-list').appendChild(table); // Append table to the DOM
+            // Attach event listener to delete buttons
+            const deleteButtons = document.querySelectorAll('.delete-button');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const policyNumber = button.dataset.policyNumber;
+                    deletePolicy(policyNumber);
+                });
+            });
+        }
+
+        // async function deletePolicy(policyNumber) {
+        //     try {
+        //         const response = await fetch(`/delete-policy/${policyNumber}`, {
+        //             method: 'DELETE'
+        //         });
+        //         if (response.ok) {
+        //             console.log('Policy deleted successfully');
+        //             window.location.href = '/policy';
+        //         } else {
+        //             console.error('Failed to delete policy');
+        //         }
+        //     } catch (error) {
+        //         console.error('Error deleting policy:', error);
+        //     }
+        // }
+
+        async function deletePolicy(policyNumber) {
+            try {
+                // Check if there are any associated claims
+                const response = await fetch(`/check-claims/${policyNumber}`);
+                if (response.ok) {
+                    const { pendingClaims } = await response.json();
+                    if (pendingClaims > 0) {
+                        // Display alert if there are pending claims
+                        alert(`Cannot delete this policy. There are ${pendingClaims} pending claim(s) associated with it.`);
+                        return;
+                    }
+                    // If there are no pending claims, proceed with policy deletion
+                    const deleteResponse = await fetch(`/delete-policy/${policyNumber}`, {
+                        method: 'DELETE'
+                    });
+                    if (deleteResponse.ok) {
+                        console.log('Policy deleted successfully');
+                        window.location.href = '/policy';
+                    } else {
+                        console.error('Failed to delete policy');
+                    }
+                } else {
+                    console.error('Failed to check claims');
+                }
+            } catch (error) {
+                console.error('Error deleting policy:', error);
+            }
+        }
+
+        // Policy Form
+        function showPolicyForm() {
+            document.getElementById('policyForm').style.display = 'block';
+        }
+
+        function updateAdditionalDocs() {
+            const policyType = document.getElementById('policyType').value;
+            const additionalDocsContainer = document.getElementById('additionalDocs');
+            additionalDocsContainer.innerHTML = ''; // Clear previous documents
+
+            // Add additional documents based on policy type
+            switch (policyType) {
+                case 'Life Insurance Policy':
+                    additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="salarySlips" name="salarySlips" value="Salary Slips">
+                        <label for="salarySlips">Salary Slips</label><br>
+                        <input type="checkbox" id="incomeTaxReturn" name="incomeTaxReturn" value="Income Tax Return">
+                        <label for="incomeTaxReturn">Income Tax Return</label><br>
+                        <input type="checkbox" id="medicalHistory" name="medicalHistory" value="Medical History">
+                        <label for="medicalHistory">Medical History</label><br>
+                        <input type="checkbox" id="prescriptionRecords" name="prescriptionRecords" value="Prescription Records">
+                        <label for="prescriptionRecords">Prescription Records</label><br>
+                    `;
+                    break;
+                case 'Health Insurance Policy':
+                    additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="medicalHistory" name="medicalHistory" value="Medical History">
+                        <label for="medicalHistory">Medical History</label><br>
+                        <input type="checkbox" id="prescriptionRecords" name="prescriptionRecords" value="Prescription Records">
+                        <label for="prescriptionRecords">Prescription Records</label><br>
+                    `;
+                    break;
+                case 'Auto Insurance Policy':
+                    additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="drivingLicence" name="drivingLicence" value="Driving Licence">
+                        <label for="drivingLicence">Driving Licence</label><br>
+                        <input type="checkbox" id="rc" name="rc" value="RC">
+                        <label for="rc">RC</label><br>
+                        <input type="checkbox" id="pollutionCheck" name="pollutionCheck" value="Pollution Check">
+                        <label for="pollutionCheck">Pollution Check</label><br>
+                    `;
+                    break;
+                case 'Rent Insurance Policy':
+                    additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="rentalAgreement" name="rentalAgreement" value="Rental Agreement">
+                        <label for="rentalAgreement">Rental Agreement</label><br>
+                        <input type="checkbox" id="inventoryList" name="inventoryList" value="Inventory List">
+                        <label for="inventoryList">Inventory List</label><br>
+                    `;
+                    break;
+                default:
+                    break;
+            }
+
+            document.getElementById('policyForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                const policyHolder = formData.get('policyHolder');
+                const policyType = formData.get('policyType');
+                const policyNumber = formData.get('policyNumber');
+                const amountAssured = formData.get('amountAssured');
+                const premiumAmount = formData.get('premiumAmount');
+                const startDate = formData.get('startDate');
+                const endDate = formData.get('endDate');
+
+                try {
+                    const response = await fetch('/add-policy', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ policyHolder, policyType, policyNumber, amountAssured, premiumAmount, startDate, endDate })
+                    });
+                    if (response.ok) {
+                        console.log('Policy added successfully');
+                        window.location.href = '/policy';
+                    } else {
+                        console.error('Failed to add policy');
+                        alert('Policy already exists. Please check your policy table or check your policy number.');
+                    }
+                } catch (error) {
+                    console.error('Error adding policy:', error);
+                }
+            });
+        }
+
+        // Function to navigate back to the dashboard
+        function goToDashboard() {
+            // Replace this with the actual URL of your dashboard
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+
+</html>

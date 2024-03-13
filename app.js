@@ -3,6 +3,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
+const fs = require("fs");
 
 const app = express();
 const port = 3000;
@@ -10,13 +11,15 @@ const port = 3000;
 // Define a variable to track authentication status
 let isAuthenticated = false;
 
-// MySQL database connection
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'pragati',
-    database: process.env.DB_NAME || 'CMS'
+// MySQL Database Connection (for Azure)
+var connection = mysql.createConnection({ 
+    host: "cms-azure-db.mysql.database.azure.com", 
+    user: "cmsazuredb", 
+    password: "Pragati4cadb", 
+    database: "cms", port: 3306, 
+    ssl: { 
+        ca: fs.readFileSync("DigiCertGlobalRootCA.crt.pem") 
+    } 
 });
 
 connection.connect((err) => {
@@ -38,11 +41,13 @@ app.use(session({
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+
+// Production Script
+app.use(express.static("./client/build/"));
 
 // Landing Page
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
+    res.sendFile(__dirname + '/client/build/index.html');
 });
 
 
@@ -53,18 +58,18 @@ app.get('/', (req, res) => {
 
 // Signup
 app.get('/signup', (req, res) => {
-    res.sendFile(__dirname + '/public/signup.html');
+    res.sendFile(__dirname + '/client/build/signup.html');
 });
 
 // Login
 app.get('/login', (req, res) => {
-    res.sendFile(__dirname + '/public/login.html');
+    res.sendFile(__dirname + '/client/build/login.html');
 });
 
 // Dashboard
 app.get('/dashboard', (req, res) => {
     if (isAuthenticated) {
-        res.sendFile(__dirname + '/public/dashboard.html');
+        res.sendFile(__dirname + '/client/build/dashboard.html');
     } else {
         res.redirect('/');
     }
@@ -73,7 +78,7 @@ app.get('/dashboard', (req, res) => {
 // Policy
 app.get('/policy', (req, res) => {
     if (isAuthenticated) {
-        res.sendFile(__dirname + '/public/policy.html');
+        res.sendFile(__dirname + '/client/build/policy.html');
     } else {
         res.redirect('/');
     }
@@ -82,7 +87,7 @@ app.get('/policy', (req, res) => {
 // Claim
 app.get('/claim', (req, res) => {
     if (isAuthenticated) {
-        res.sendFile(__dirname + '/public/claim.html');
+        res.sendFile(__dirname + '/client/build/claim.html');
     } else {
         res.redirect('/');
     }
@@ -407,18 +412,18 @@ app.post('/add-claim', async (req, res) => {
 
 // Signup-Admin
 app.get('/signup-admin', (req, res) => {
-    res.sendFile(__dirname + '/public/signup-admin.html');
+    res.sendFile(__dirname + '/client/build/signup-admin.html');
 });
 
 // Login-Admin
 app.get('/login-admin', (req, res) => {
-    res.sendFile(__dirname + '/public/login-admin.html');
+    res.sendFile(__dirname + '/client/build/login-admin.html');
 });
 
 // Dashboard-Admin
 app.get('/dashboard-admin', (req, res) => {
     if (isAuthenticated) {
-        res.sendFile(__dirname + '/public/dashboard-admin.html');
+        res.sendFile(__dirname + '/client/build/dashboard-admin.html');
     } else {
         res.redirect('/');
     }
@@ -427,7 +432,7 @@ app.get('/dashboard-admin', (req, res) => {
 // View-Claims
 app.get('/view-claims', (req, res) => {
     if (isAuthenticated) {
-        res.sendFile(__dirname + '/public/view-claims.html');
+        res.sendFile(__dirname + '/client/build/view-claims.html');
     } else {
         res.redirect('/');
     }
@@ -599,7 +604,7 @@ app.put('/add-reason/:id', (req, res) => {
                 res.status(500).json({ error: 'Error adding reason' });
                 return;
             }
-            res.json({ message: 'Reason added successfully' });
+            res.json({ message: 'Reason added  successfully' });
         }
     );
 });
@@ -608,6 +613,7 @@ app.put('/add-reason/:id', (req, res) => {
 // ----------------------------------------------------------------------
 // -----------------------PORT ROUTE HANDLED BELOW-----------------------
 // ----------------------------------------------------------------------
+
 
 app.listen(process.env.PORT || port, () => {
     console.log(`Server running on port ${port}`);

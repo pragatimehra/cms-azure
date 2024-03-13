@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            display: flex;
+            margin: 50px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow-x: auto;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #links {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .divider {
+            width: 1px;
+            background-color: #007bff;
+            margin: 20px;
+        }
+
+        h3 {
+            color: #007bff;
+        }
+
+        /* CSS styles for the table */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 2px solid #a2a2a2;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #e3e3e3;
+        }
+
+        button {
+            padding: 8px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Modal Popup Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Policy Form (Initially hidden) */
+        #policyForm {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #policyForm h2 {
+            color: #007bff;
+        }
+
+        #policyForm input[type="text"],
+        #policyForm input[type="number"],
+        #policyForm input[type="date"],
+        #policyForm select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #policyForm button[type="submit"] {
+            width: 100%;
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #policyForm button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="links">
+            <h3>Quick Links</h3>
+            <button id="addPolicyBtn" onclick="showPolicyForm()">Add Policy</button>
+
+            <!-- Button to go back to the dashboard -->
+            <button onclick="goToDashboard()">Go Back to Dashboard</button>
+
+            <!-- Policy Form Popup -->
+            <div id="policyFormPopup" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+
+                    <!-- Policy Form (Initially hidden) -->
+                    <div id="policyForm">
+                        <h2>Add New Policy</h2>
+                        <form id="addPolicyForm">
+                            <label for="policyHolder">Policy Holder:</label><br>
+                            <input type="text" id="policyHolder" name="policyHolder" autocomplete="off" required><br>
+
+                            <label for="policyType">Policy Type:</label><br>
+                            <select id="policyType" name="policyType" required onchange="updateAdditionalDocs()">
+                                <option value="" selected disabled>Select</option>
+                                <option value="Life Insurance Policy">Life Insurance Policy</option>
+                                <option value="Health Insurance Policy">Health Insurance Policy</option>
+                                <option value="Auto Insurance Policy">Auto Insurance Policy</option>
+                                <option value="Rent Insurance Policy">Rent Insurance Policy</option>
+                            </select><br>
+
+                            <label for="policyNumber">Policy Number:</label><br>
+                            <input type="number" id="policyNumber" name="policyNumber" required><br>
+
+                            <label for="amountAssured">Amount Assured:</label><br>
+                            <input type="number" id="amountAssured" name="amountAssured" step="0.01" required><br>
+
+                            <label for="premiumAmount">Premium Amount:</label><br>
+                            <input type="number" id="premiumAmount" name="premiumAmount" step="0.01" required><br>
+
+                            <label for="startDate">Start Date:</label><br>
+                            <input type="date" id="startDate" name="startDate" onchange="calculateEndDate()"
+                                required><br>
+
+                            <label for="endDate">End Date:</label><br>
+                            <input type="date" id="endDate" name="endDate" required readonly><br>
+
+                            <label for="policyDocs">Policy Documents:</label><br>
+                            <input type="checkbox" id="aadharCard" name="aadharCard" value="Aadhar Card">
+                            <label for="aadharCard">Aadhar Card</label><br>
+                            <input type="checkbox" id="panCard" name="panCard" value="Pan Card">
+                            <label for="panCard">Pan Card</label><br>
+
+                            <!-- Additional documents based on policy type -->
+                            <div id="additionalDocs">
+                                <!-- Additional documents will be dynamically added here -->
+                            </div>
+
+                            <button type="submit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div> <!-- Vertical divider -->
+
+        <div id="main-content">
+            <h1>Policy Information</h1>
+            <div id="policy-list">
+                <!-- Policy list will be displayed here -->
+            </div>
+        </div>
+
+        <script>
+            // Function to calculate the end date
+            function calculateEndDate() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = new Date(startDate); // Create a Date object from the start date
+                endDate.setDate(endDate.getDate() - 1); // Subtract one day to get the day before the start date next year
+                endDate.setFullYear(endDate.getFullYear() + 1); // Add one year to the start date
+                document.getElementById('endDate').valueAsDate = endDate; // Set the end date input value to the calculated end date
+            }
+
+            // Policy Table
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    const response = await fetch('/user-policies');
+                    if (response.ok) {
+                        const policies = await response.json();
+                        displayPoliciesTable(policies);
+                    } else {
+                        console.error('Failed to fetch user policies');
+                        alert('Failed to fetch user policies');
+                    }
+                } catch (error) {
+                    console.error('Error fetching user policies:', error);
+                }
+            });
+
+            function displayPoliciesTable(policies) {
+                const table = document.createElement('table');
+                // Create table header
+                const headerRow = table.insertRow();
+                const keys = Object.keys(policies[0]); // Get the keys to ensure the order of columns
+                keys.forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                });
+                // Add a new column for the Action
+                const actionHeader = document.createElement('th');
+                actionHeader.textContent = 'Action';
+                headerRow.appendChild(actionHeader);
+                // Create table body
+                policies.forEach(policy => {
+                    const row = table.insertRow();
+                    keys.forEach(key => {
+                        const cell = row.insertCell();
+                        cell.textContent = policy[key];
+                    });
+                    // Add delete button in each row
+                    const deleteCell = row.insertCell();
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.classList.add('delete-button');
+                    deleteButton.dataset.policyNumber = policy['PolicyNumber']; // Capturing the PolicyNumber here
+                    deleteCell.appendChild(deleteButton);
+                });
+                document.getElementById('policy-list').appendChild(table); // Append table to the DOM
+                // Attach event listener to delete buttons
+                const deleteButtons = document.querySelectorAll('.delete-button');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const policyNumber = button.dataset.policyNumber;
+                        deletePolicy(policyNumber);
+                    });
+                });
+            }
+
+            async function deletePolicy(policyNumber) {
+                try {
+                    // Check if there are any associated claims
+                    const response = await fetch(`/check-claims/${policyNumber}`);
+                    if (response.ok) {
+                        const { pendingClaims } = await response.json();
+                        if (pendingClaims > 0) {
+                            // Display alert if there are pending claims
+                            alert(`Cannot delete this policy. There are ${pendingClaims} claim(s) associated with it.`);
+                            return;
+                        }
+                        // If there are no pending claims, proceed with policy deletion
+                        const deleteResponse = await fetch(`/delete-policy/${policyNumber}`, {
+                            method: 'DELETE'
+                        });
+                        if (deleteResponse.ok) {
+                            console.log('Policy deleted successfully');
+                            window.location.href = '/policy';
+                        } else {
+                            console.error('Failed to delete policy');
+                        }
+                    } else {
+                        console.error('Failed to check claims');
+                    }
+                } catch (error) {
+                    console.error('Error deleting policy:', error);
+                }
+            }
+
+            // Get the modal
+            var modal = document.getElementById("policyFormPopup");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("addPolicyBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks on the button, open the modal
+            btn.onclick = function () {
+                modal.style.display = "block";
+            }
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            // Policy Form
+            function showPolicyForm() {
+                document.getElementById('policyForm').style.display = 'block';
+            }
+
+            function updateAdditionalDocs() {
+                const policyType = document.getElementById('policyType').value;
+                const additionalDocsContainer = document.getElementById('additionalDocs');
+                additionalDocsContainer.innerHTML = ''; // Clear previous documents
+
+                // Add additional documents based on policy type
+                switch (policyType) {
+                    case 'Life Insurance Policy':
+                        additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="salarySlips" name="salarySlips" value="Salary Slips">
+                        <label for="salarySlips">Salary Slips</label><br>
+                        <input type="checkbox" id="incomeTaxReturn" name="incomeTaxReturn" value="Income Tax Return">
+                        <label for="incomeTaxReturn">Income Tax Return</label><br>
+                        <input type="checkbox" id="medicalHistory" name="medicalHistory" value="Medical History">
+                        <label for="medicalHistory">Medical History</label><br>
+                        <input type="checkbox" id="prescriptionRecords" name="prescriptionRecords" value="Prescription Records">
+                        <label for="prescriptionRecords">Prescription Records</label><br>
+                    `;
+                        break;
+                    case 'Health Insurance Policy':
+                        additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="medicalHistory" name="medicalHistory" value="Medical History">
+                        <label for="medicalHistory">Medical History</label><br>
+                        <input type="checkbox" id="prescriptionRecords" name="prescriptionRecords" value="Prescription Records">
+                        <label for="prescriptionRecords">Prescription Records</label><br>
+                    `;
+                        break;
+                    case 'Auto Insurance Policy':
+                        additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="drivingLicence" name="drivingLicence" value="Driving Licence">
+                        <label for="drivingLicence">Driving Licence</label><br>
+                        <input type="checkbox" id="rc" name="rc" value="RC">
+                        <label for="rc">RC</label><br>
+                        <input type="checkbox" id="pollutionCheck" name="pollutionCheck" value="Pollution Check">
+                        <label for="pollutionCheck">Pollution Check</label><br>
+                    `;
+                        break;
+                    case 'Rent Insurance Policy':
+                        additionalDocsContainer.innerHTML += `
+                        <input type="checkbox" id="rentalAgreement" name="rentalAgreement" value="Rental Agreement">
+                        <label for="rentalAgreement">Rental Agreement</label><br>
+                        <input type="checkbox" id="inventoryList" name="inventoryList" value="Inventory List">
+                        <label for="inventoryList">Inventory List</label><br>
+                    `;
+                        break;
+                    default:
+                        break;
+                }
+
+                document.getElementById('policyForm').addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    const formData = new FormData(event.target);
+                    const policyHolder = formData.get('policyHolder');
+                    const policyType = formData.get('policyType');
+                    const policyNumber = formData.get('policyNumber');
+                    const amountAssured = formData.get('amountAssured');
+                    const premiumAmount = formData.get('premiumAmount');
+                    const startDate = formData.get('startDate');
+                    const endDate = formData.get('endDate');
+
+                    try {
+                        const response = await fetch('/add-policy', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ policyHolder, policyType, policyNumber, amountAssured, premiumAmount, startDate, endDate })
+                        });
+                        if (response.ok) {
+                            console.log('Policy added successfully');
+                            window.location.href = '/policy';
+                        } else {
+                            console.error('Failed to add policy');
+                            alert('Policy already exists. Please check your policy table or check your policy number.');
+                        }
+                    } catch (error) {
+                        console.error('Error adding policy:', error);
+                    }
+                });
+            }
+
+            // Function to navigate back to the dashboard
+            function goToDashboard() {
+                // Replace this with the actual URL of your dashboard
+                window.location.href = '/dashboard';
+            }
+        </script>
+
+</body>
+
+</html>

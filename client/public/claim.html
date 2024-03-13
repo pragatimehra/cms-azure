@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            display: flex;
+            margin: 50px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow-x: auto;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #links {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .divider {
+            width: 1px;
+            background-color: #007bff;
+            margin: 20px;
+        }
+
+        h3 {
+            color: #007bff;
+        }
+
+        /* CSS styles for the table */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 2px solid #a2a2a2;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #e3e3e3;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Modal Popup Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Claim Form (Initially hidden) */
+        #claimForm {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #claimForm h2 {
+            color: #007bff;
+        }
+
+        #claimForm input[type="text"],
+        #claimForm input[type="number"],
+        #claimForm input[type="date"],
+        #claimForm select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #claimReason {
+            margin-bottom: 15px;
+        }
+
+        #claimForm button[type="submit"] {
+            width: 100%;
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #claimForm button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="links">
+            <h3>Quick Links</h3>
+            <button id="addClaimBtn" onclick="showClaimForm()">Add Claim</button>
+
+            <!-- Button to go back to the dashboard -->
+            <button onclick="goToDashboard()">Go Back to Dashboard</button>
+
+            <!-- Claim Form Popup -->
+            <div id="claimFormPopup" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+
+                    <!-- Claim Form (Initially hidden) -->
+                    <div id="claimForm">
+                        <h2>Add New Claim</h2>
+                        <form id="addClaimForm">
+                            <label for="claimant">Claimant:</label><br>
+                            <input type="text" id="claimant" name="claimant" autocomplete="off" required><br>
+
+                            <label for="policyNumber">Policy Number:</label><br>
+                            <input type="number" id="policyNumber" name="policyNumber" required><br>
+
+                            <label for="claimType">Claim Type:</label><br>
+                            <select id="claimType" name="claimType" required onchange="updateClaimReason()">
+                                <option value="" selected disabled>Select</option>
+                                <option value="Life Claim">Life Claim</option>
+                                <option value="Health Claim">Health Claim</option>
+                                <option value="Auto Claim">Auto Claim</option>
+                                <option value="Rent Claim">Rent Claim</option>
+                            </select><br>
+
+                            <!-- Claim reasons based on claim type -->
+                            <div id="claimReason">
+                                <!-- Claim reason will be dynamically added here -->
+                            </div>
+
+                            <label for="claimAmount">Claim Amount:</label><br>
+                            <input type="number" id="claimAmount" name="claimAmount" required><br>
+
+                            <label for="claimDate">Claim Date:</label><br>
+                            <input type="date" id="claimDate" name="claimDate" value="" disabled><br>
+
+                            <label for="claimDocs">Claim Documents:</label><br>
+                            <input type="checkbox" id="aadharCard" name="aadharCard" value="Aadhar Card">
+                            <label for="aadharCard">Aadhar Card</label><br>
+                            <input type="checkbox" id="panCard" name="panCard" value="Pan Card">
+                            <label for="panCard">Pan Card</label><br>
+
+                            <!-- Additional documents based on claim type -->
+                            <div id="additionalDocs">
+                                <!-- Additional documents will be dynamically added here -->
+                            </div>
+
+                            <button type="submit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div> <!-- Vertical divider -->
+
+        <div id="main-content">
+            <h1>Claim Information</h1>
+            <div id="claim-list">
+                <!-- Claim list will be displayed here -->
+            </div>
+        </div>
+
+        <script>
+            // Claim Table
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    const response = await fetch('/user-claims');
+                    if (response.ok) {
+                        const claims = await response.json();
+                        displayClaimsTable(claims);
+                    } else {
+                        console.error('Failed to fetch user claims');
+                    }
+                } catch (error) {
+                    console.error('Error fetching user claims:', error);
+                }
+
+                // Set default value for claim date field
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('claimDate').value = today;
+            });
+
+            function displayClaimsTable(claims) {
+                const table = document.createElement('table');
+                // Create table header
+                const headerRow = table.insertRow();
+                for (const key in claims[0]) {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                }
+
+                // Create table body
+                claims.forEach(claim => {
+                    const row = table.insertRow();
+                    for (const key in claim) {
+                        const cell = row.insertCell();
+                        cell.textContent = claim[key];
+                    }
+                });
+                document.getElementById('claim-list').appendChild(table); // Append table to the DOM
+            }
+
+            // Get the modal
+            var modal = document.getElementById("claimFormPopup");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("addClaimBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks on the button, open the modal
+            btn.onclick = function () {
+                modal.style.display = "block";
+            }
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            // Claim Form
+            function showClaimForm() {
+                document.getElementById('claimForm').style.display = 'block';
+            }
+
+            function updateClaimReason() {
+                const claimType = document.getElementById('claimType').value;
+                const claimReasonContainer = document.getElementById('claimReason');
+                const additionalDocsContainer = document.getElementById('additionalDocs');
+                claimReasonContainer.innerHTML = ''; // Clear previous documents
+
+                // Add radio buttons based on claim reason
+                switch (claimType) {
+                    case 'Life Claim':
+                        claimReasonContainer.innerHTML += `
+        <input type="radio" id="deathBenefit" name="claimReason" value="Death Benefit" onchange="updateAdditionalDocs()">
+        <label for="deathBenefit">Death Benefit Claim</label><br>
+        <input type="radio" id="policySurrender" name="claimReason" value="Policy Surrender Claim" onchange="updateAdditionalDocs()">
+        <label for="policySurrender">Policy Surrender Claim</label><br>
+        <input type="radio" id="policyMaturity" name="claimReason" value="Policy Maturity Claim" onchange="updateAdditionalDocs()">
+        <label for="policyMaturity">Policy Maturity Claim</label><br>
+    `;
+                        break;
+                    case 'Health Claim':
+                        claimReasonContainer.innerHTML += `
+        <input type="radio" id="medicalExpense" name="claimReason" value="Medical Expense Claim" onchange="updateAdditionalDocs()">
+        <label for="medicalExpense">Medical Expense Claim</label><br>
+        <input type="radio" id="hospitalization" name="claimReason" value="Hospitalization Claim" onchange="updateAdditionalDocs()">
+        <label for="hospitalization">Hospitalization Claim</label><br>
+    `;
+                        break;
+                    case 'Auto Claim':
+                        claimReasonContainer.innerHTML += `
+        <input type="radio" id="accidentalDamage" name="claimReason" value="Accidental Damage Claim" onchange="updateAdditionalDocs()">
+        <label for="accidentalDamage">Accidental Damage Claim</label><br>
+        <input type="radio" id="theft" name="claimReason" value="Theft Claim" onchange="updateAdditionalDocs()">
+        <label for="theft">Theft Claim</label><br>
+    `;
+                        break;
+                    case 'Rent Claim':
+                        claimReasonContainer.innerHTML += `
+        <input type="radio" id="propertyDamage" name="claimReason" value="Property Damage" onchange="updateAdditionalDocs()">
+        <label for="propertyDamage">Property Damage Claim</label><br>
+        <input type="radio" id="liability" name="claimReason" value="Liability Claim" onchange="updateAdditionalDocs()">
+        <label for="liability">Liability Claim</label><br>
+    `;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // Function to update additional documents based on claim type and claim reason
+            function updateAdditionalDocs() {
+                const claimType = document.getElementById('claimType').value;
+                const claimReason = document.querySelector('input[name="claimReason"]:checked').value;
+                const additionalDocsContainer = document.getElementById('additionalDocs');
+                additionalDocsContainer.innerHTML = ''; // Clear previous documents
+
+                // Add additional claim documents based on claim type and claim reason
+                switch (claimType) {
+                    case 'Life Claim':
+                        switch (claimReason) {
+                            case 'Death Benefit':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="deathCertificate" name="deathCertificate" value="Death Certificate">
+                <label for="deathCertificate">Death Certificate</label><br>
+                <input type="checkbox" id="medicalRecords" name="medicalRecords" value="Medical Records">
+                <label for="medicalRecords">Medical Records</label><br>
+            `;
+                                break;
+                            case 'Policy Surrender Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="surrenderForm" name="surrenderForm" value="Surrender Form">
+                <label for="surrenderForm">Surrender Form</label><br>
+            `;
+                                break;
+                            case 'Policy Maturity Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="policyMaturityDoc" name="policyMaturityDoc" value="Policy Maturity Document">
+                <label for="policyMaturityDoc">Policy Maturity Document</label><br>
+            `;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case 'Health Claim':
+                        switch (claimReason) {
+                            case 'Medical Expense Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="medicalBills" name="medicalBills" value="Medical Bills">
+                <label for="medicalBills">Medical Bills</label><br>
+                <input type="checkbox" id="prescriptions" name="prescriptions" value="Prescriptions">
+                <label for="prescriptions">Prescriptions</label><br>
+            `;
+                                break;
+                            case 'Hospitalization Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="hospitalRecords" name="hospitalRecords" value="Hospital Records">
+                <label for="hospitalRecords">Hospital Records</label><br>
+            `;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case 'Auto Claim':
+                        switch (claimReason) {
+                            case 'Accidental Damage Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="damageReport" name="damageReport" value="Damage Report">
+                <label for="damageReport">Damage Report</label><br>
+                <input type="checkbox" id="policeReport" name="policeReport" value="Police Report">
+                <label for="policeReport">Police Report</label><br>
+            `;
+                                break;
+                            case 'Theft Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="theftReport" name="theftReport" value="Theft Report">
+                <label for="theftReport">Theft Report</label><br>
+            `;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case 'Rent Insurance Policy':
+                        switch (claimReason) {
+                            case 'Property Damage':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="propertyDamageReport" name="propertyDamageReport" value="Property Damage Report">
+                <label for="propertyDamageReport">Property Damage Report</label><br>
+            `;
+                                break;
+                            case 'Liability Claim':
+                                additionalDocsContainer.innerHTML += `
+                <input type="checkbox" id="liabilityClaimForm" name="liabilityClaimForm" value="Liability Claim Form">
+                <label for="liabilityClaimForm">Liability Claim Form</label><br>
+            `;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            document.getElementById('claimForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                const claimant = formData.get('claimant');
+                const policyNumber = formData.get('policyNumber');
+                const claimType = formData.get('claimType');
+                const claimReason = formData.get('claimReason');
+                const claimAmount = formData.get('claimAmount');
+                const claimDate = document.getElementById('claimDate').value; // Get the hardcoded claimDate value
+
+                try {
+                    const response = await fetch('/add-claim', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ claimant, policyNumber, claimType, claimReason, claimAmount, claimDate })
+                    });
+
+                    if (response.ok) {
+                        console.log('Claim added successfully');
+                        window.location.href = '/claim';
+                    } else if (response.status === 400) {
+                        // Handle client-side errors (e.g., invalid inputs)
+                        const errorMessage = await response.text();
+                        alert(errorMessage);
+                    } else if (response.status === 404) {
+                        // Handle policy not found error
+                        alert('Policy not found. Please check your Policy Number and try again.');
+                    } else {
+                        console.error('Failed to add claim');
+                        alert('Failed to generate claim. Please try again later.');
+                    }
+                } catch (error) {
+                    console.error('Error adding claim:', error);
+                    alert('An unexpected error occurred. Please try again later.');
+                }
+            });
+   
+            // Function to navigate back to the dashboard
+            function goToDashboard() {
+                // Replace this with the actual URL of your dashboard
+                window.location.href = '/dashboard';
+            }
+        </script>
+
+</body>
+
+</html>

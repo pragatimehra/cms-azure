@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Claims</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            display: flex;
+            margin: 50px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow-x: auto;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #links {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .divider {
+            width: 1px;
+            background-color: #007bff;
+            margin: 20px;
+        }
+
+        h3 {
+            color: #007bff;
+        }
+
+        /* CSS styles for the table */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 2px solid #a2a2a2;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #e3e3e3;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="links">
+            <h3>Quick Links</h3>
+            <!-- Button to go back to the dashboard -->
+            <button onclick="goToDashboard()">Go Back to Dashboard</button>
+        </div>
+
+        <div class="divider"></div> <!-- Vertical divider -->
+
+        <div id="main-content">
+            <h1>User Claims</h1>
+            <div id="claim-list">
+                <!-- Claim list will be displayed here -->
+            </div>
+        </div>
+
+        <script>
+
+            // Claim Table
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    const response = await fetch('/admin-claims');
+                    if (response.ok) {
+                        const claims = await response.json();
+                        displayClaimsTable(claims);
+                    } else {
+                        console.error('Failed to fetch user claims');
+                    }
+                } catch (error) {
+                    console.error('Error fetching user claims:', error);
+                }
+            });
+
+            function displayClaimsTable(claims) {
+                const table = document.createElement('table');
+                // Create table header
+                const headerRow = table.insertRow();
+                for (const key in claims[0]) {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                }
+                // Add columns for status change and reason
+                const statusHeader = document.createElement('th');
+                statusHeader.textContent = 'Change Status';
+                headerRow.appendChild(statusHeader);
+                const reasonHeader = document.createElement('th');
+                reasonHeader.textContent = 'Reason';
+                headerRow.appendChild(reasonHeader);
+
+                // Create table body
+                claims.forEach(claim => {
+                    const row = table.insertRow();
+                    row.dataset.claimId = claim.ClaimID; // Set claim ID as data attribute of the row
+                    for (const key in claim) {
+                        const cell = row.insertCell();
+                        // Check if the value is a string resembling a date format
+                        const cellValue = isDateString(claim[key]) ? formatDate(claim[key]) : claim[key];
+                        cell.textContent = cellValue;
+                    }
+                    // Add dropdown for status change
+                    const statusCell = row.insertCell();
+                    const statusSelect = document.createElement('select');
+                    statusSelect.innerHTML = `
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+                `;
+                    statusSelect.value = claim.Status;
+                    statusCell.appendChild(statusSelect);
+                    // Event listener for status change
+                    statusSelect.addEventListener('change', async (event) => {
+                        const claimId = row.dataset.claimId; // Extract claim ID from the row
+                        const newStatus = event.target.value;
+                        await changeClaimStatus(claimId, newStatus);
+                    });
+
+                    // Add input field for reason
+                    const reasonCell = row.insertCell();
+                    const reasonInput = document.createElement('input');
+                    reasonInput.type = 'text';
+                    reasonInput.placeholder = 'Enter reason';
+                    reasonInput.value = claim.Reason;
+                    reasonCell.appendChild(reasonInput);
+                    // Event listener for reason input
+                    reasonInput.addEventListener('change', async (event) => {
+                        const claimId = row.dataset.claimId; // Extract claim ID from the row
+                        const reason = event.target.value;
+                        await addReason(claimId, reason);
+                    });
+                });
+                document.getElementById('claim-list').appendChild(table); // Append table to the DOM
+            }
+
+            // Function to change claim status
+            async function changeClaimStatus(claimId, newStatus) {
+                try {
+                    const response = await fetch(`/update-claim-status/${claimId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to update claim status');
+                    }
+                    const data = await response.json();
+                    console.log('Claim status updated successfully');
+                    // Show success message in UI
+                    alert('Claim status updated successfully');
+                } catch (error) {
+                    console.error('Error updating claim status:', error);
+                    // Show error message in UI
+                    alert('Failed to update claim status');
+                }
+            }
+
+            // Function to add reason for declining claim
+            async function addReason(claimId, reason) {
+                try {
+                    const response = await fetch(`/add-reason/${claimId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reason })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to add reason');
+                    }
+                    const data = await response.json();
+                    console.log('Reason added successfully');
+                    // Show success message in UI
+                    alert('Reason added successfully');
+                } catch (error) {
+                    console.error('Error adding reason:', error);
+                    // Show error message in UI
+                    alert('Failed to add reason');
+                }
+            }
+
+
+            // Function to check if a string resembles a date format
+            function isDateString(value) {
+                // Regular expression to match ISO 8601 date format
+                const iso8601Pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+                return typeof value === 'string' && iso8601Pattern.test(value);
+            }
+
+            // Function to format date from ISO 8601 format string
+            function formatDate(dateString) {
+                // Split date string by 'T' and return only the part before 'T'
+                return dateString.split('T')[0];
+            }
+
+            // Function to navigate back to the dashboard
+            function goToDashboard() {
+                // Replace this with the actual URL of your dashboard
+                window.location.href = '/dashboard-admin';
+            }
+        </script>
+
+</body>
+
+</html>
